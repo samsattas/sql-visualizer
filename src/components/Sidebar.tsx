@@ -1,15 +1,51 @@
 import React from 'react';
-import { Settings2, Variable, Table as TableIcon } from 'lucide-react';
+import { Settings2, Variable, Table as TableIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ParsedSQL } from '../types';
 import { Badge } from './Badge';
 
 interface SidebarProps {
   parsed: ParsedSQL;
+  isOpen: boolean;
+  onToggle: () => void;
 }
 
-export const Sidebar: React.FC<SidebarProps> = ({ parsed }) => {
+export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) => {
+  if (!isOpen) {
+    return (
+      <div className="h-full flex flex-col items-center py-4 gap-3 border-r border-zinc-800/50">
+        <button
+          onClick={onToggle}
+          title="Expand panel"
+          className="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white transition-colors"
+        >
+          <ChevronRight className="w-4 h-4" />
+        </button>
+        <div className="flex-1 flex items-center justify-center">
+          <span
+            className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest"
+            style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
+          >
+            Parameters & Variables
+          </span>
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="h-full overflow-y-auto custom-scrollbar pr-2 space-y-6">
+    <div className="h-full overflow-y-auto custom-scrollbar space-y-6">
+      {/* Header row with collapse button */}
+      <div className="flex items-center justify-between">
+        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Left panel</span>
+        <button
+          onClick={onToggle}
+          title="Collapse panel"
+          className="w-6 h-6 flex items-center justify-center rounded bg-zinc-900 border border-zinc-800 hover:border-zinc-700 text-zinc-500 hover:text-white transition-colors"
+        >
+          <ChevronLeft className="w-3 h-3" />
+        </button>
+      </div>
+
       <section>
         <div className="flex items-center gap-2 mb-4">
           <Settings2 className="w-4 h-4 text-zinc-500" />
