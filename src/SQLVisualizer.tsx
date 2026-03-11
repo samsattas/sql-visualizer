@@ -174,9 +174,9 @@ END`);
               <Sidebar parsed={parsed} isOpen={sidebarOpen} onToggle={() => setSidebarOpen(v => !v)} />
 
               {/* Center: Flow Diagram */}
-              <div className="h-full overflow-y-auto custom-scrollbar pr-2 bg-zinc-950/50 rounded-3xl border border-zinc-800/50 p-6 relative">
+              <div className="h-full overflow-auto custom-scrollbar bg-zinc-950/50 rounded-3xl border border-zinc-800/50 p-6 relative">
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.03),transparent)] pointer-events-none" />
-                <div className="relative z-10">
+                <div className="relative z-10 min-w-fit">
                   {parsed.nodes.length > 0 ? (
                     parsed.nodes.map((node, i) => (
                       <FlowNode

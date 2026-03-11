@@ -68,7 +68,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
             <code className="text-sm text-yellow-200 font-bold">{node.condition}</code>
           </div>
           
-          <div className={`grid ${node.elseBranch?.length ? 'md:grid-cols-2' : 'grid-cols-1'} gap-6`}>
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <Badge className="bg-green-950 text-green-400 border-green-900">TRUE BRANCH</Badge>
@@ -102,7 +102,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
     return (
       <div className="w-full mb-8" onClick={(e) => { e.stopPropagation(); onNodeClick?.(node); }}>
         <Card header="TRY / CATCH" headerColor="zinc" className={`shadow-xl border-dashed transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02]' : 'hover:border-zinc-600'}`}>
-          <div className="grid md:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 gap-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
                 <Badge className="bg-zinc-800 text-zinc-400 border-zinc-700">TRY BLOCK</Badge>

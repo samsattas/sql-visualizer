@@ -39,7 +39,7 @@ export const Card: React.FC<CardProps> = ({ children, className = "", header, he
   };
 
   return (
-    <div className={`rounded-lg border border-zinc-800 overflow-hidden border-l-4 ${colorMap[headerColor] || colorMap.zinc} ${className}`}>
+    <div className={`rounded-lg border border-zinc-800 overflow-hidden border-l-4 min-w-65 ${colorMap[headerColor] || colorMap.zinc} ${className}`}>
       {header && (
         <div className={`px-3 py-1 text-[10px] font-black uppercase tracking-widest border-b border-zinc-800/50 ${headerBgMap[headerColor] || headerBgMap.zinc}`}>
           {header}
