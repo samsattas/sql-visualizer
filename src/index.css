@@ -15,4 +15,19 @@
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
     background: #3f3f46;
   }
+
+  .subtle-scrollbar::-webkit-scrollbar {
+    width: 3px;
+    height: 3px;
+  }
+  .subtle-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .subtle-scrollbar::-webkit-scrollbar-thumb {
+    background: #3f3f4640;
+    border-radius: 10px;
+  }
+  .subtle-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: #52525b80;
+  }
 }

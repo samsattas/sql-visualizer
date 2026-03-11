@@ -21,7 +21,7 @@ const StatTooltip = ({ label, color }: { label: string, color: string }) => (
   </motion.div>
 );
 
-const ListTooltip = ({ title, items }: { title: string, items: string[] }) => (
+const ListTooltip = ({ title, items, dotColor }: { title: string, items: string[], dotColor?: string }) => (
   <motion.div
     initial={{ opacity: 0, y: 5, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -31,7 +31,7 @@ const ListTooltip = ({ title, items }: { title: string, items: string[] }) => (
     <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1.5">{title}</p>
     {items.length > 0 ? items.map((item, i) => (
       <div key={i} className="flex items-center gap-1.5 py-0.5">
-        <div className="w-1 h-1 rounded-full bg-zinc-500 flex-none" />
+        <div className={`w-1 h-1 rounded-full flex-none ${dotColor ?? 'bg-zinc-500'}`} />
         <span className="text-[11px] font-mono text-zinc-200 whitespace-nowrap">{item}</span>
       </div>
     )) : (
@@ -41,7 +41,7 @@ const ListTooltip = ({ title, items }: { title: string, items: string[] }) => (
   </motion.div>
 );
 
-const OperationStat = ({ count, label, color, dotColor }: { count: number, label: string, color: string, dotColor: string }) => {
+const OperationStat = ({ count, label, color, dotColor, items }: { count: number, label: string, color: string, dotColor: string, items?: string[] }) => {
   const [isHovered, setIsHovered] = useState(false);
 
   return (
@@ -51,7 +51,11 @@ const OperationStat = ({ count, label, color, dotColor }: { count: number, label
       onMouseLeave={() => setIsHovered(false)}
     >
       <AnimatePresence>
-        {isHovered && <StatTooltip label={label} color={dotColor} />}
+        {isHovered && (
+          items
+            ? <ListTooltip title={label} items={items} dotColor={dotColor} />
+            : <StatTooltip label={label} color={dotColor} />
+        )}
       </AnimatePresence>
       <div className={`w-2 h-2 rounded-full ${dotColor} group-hover:ring-4 group-hover:ring-${color}/20 transition-all`} />
       <span className="text-sm font-black text-white">{count}</span>
@@ -81,6 +85,27 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
   const databaseNames = Array.from<string>(new Set(parsed.tables.map(t => t.database)));
   const tableNames = parsed.tables.map(t => t.database !== 'Default' ? `${t.database}.${t.name}` : t.name);
 
+  const flattenNodes = (nodes: typeof parsed.nodes): typeof parsed.nodes => {
+    const result: typeof parsed.nodes = [];
+    const visit = (n: (typeof parsed.nodes)[0]) => {
+      result.push(n);
+      n.children.forEach(visit);
+      n.trueBranch?.forEach(visit);
+      n.elseBranch?.forEach(visit);
+    };
+    nodes.forEach(visit);
+    return result;
+  };
+
+  const execNames = Array.from<string>(new Set(
+    flattenNodes(parsed.nodes)
+      .filter(n => n.type === 'EXEC')
+      .map(n => {
+        const m = n.title.match(/^EXEC(?:UTE)?\s+([\[\]\w\.]+)/i);
+        return m ? m[1] : n.title;
+      })
+  ));
+
   return (
     <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 p-4 z-[60] shadow-2xl">
       <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-6">
@@ -93,7 +118,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
                 <OperationStat count={parsed.summary.inserts} label="INSERT (CREATE)" color="orange-500" dotColor="bg-orange-500" />
                 <OperationStat count={parsed.summary.updates} label="UPDATE (MODIFY)" color="red-500" dotColor="bg-red-500" />
                 <OperationStat count={parsed.summary.deletes} label="DELETE (REMOVE)" color="purple-500" dotColor="bg-purple-500" />
-                <OperationStat count={parsed.summary.execs} label="EXEC (CALL)" color="cyan-500" dotColor="bg-cyan-500" />
+                <OperationStat count={parsed.summary.execs} label="EXEC (CALL)" color="cyan-500" dotColor="bg-cyan-500" items={execNames} />
               </div>
             </div>
           </div>

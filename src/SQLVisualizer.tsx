@@ -109,18 +109,6 @@ END`);
             </div>
             <div className="flex items-center gap-2">
               <button
-                onClick={handleAnalyze}
-                disabled={isAnalyzing}
-                className="px-5 py-2 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 text-white font-black text-xs rounded-lg transition-all flex items-center gap-2 shadow-lg shadow-blue-900/20 active:scale-95"
-              >
-                {isAnalyzing ? (
-                  <div className="w-3.5 h-3.5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                )}
-                {isAnalyzing ? 'ANALYZING...' : 'ANALYZE'}
-              </button>
-              <button
                 onClick={() => setInputOpen(v => !v)}
                 title={inputOpen ? 'Collapse input' : 'Expand input'}
                 className="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors"
@@ -131,16 +119,28 @@ END`);
           </div>
 
           {inputOpen && (
-            <div className="relative group">
+            <div className="relative">
               <textarea
                 value={sql}
                 onChange={(e) => setSql(e.target.value)}
                 placeholder="Paste your SQL script here..."
-                className="w-full h-24 bg-zinc-950 border border-zinc-800 rounded-xl p-4 font-mono text-sm text-zinc-400 focus:outline-none focus:border-blue-500/50 transition-colors resize-none shadow-inner"
+                className="w-full h-32 bg-zinc-950 border border-zinc-800 rounded-xl p-4 pb-14 pr-44 font-mono text-sm text-zinc-400 focus:outline-none focus:border-blue-500/50 transition-colors resize-none shadow-inner subtle-scrollbar"
               />
-              <div className="absolute top-3 right-3 opacity-0 group-hover:opacity-100 transition-opacity">
+              <div className="absolute top-3 right-3 opacity-0 hover:opacity-100 transition-opacity pointer-events-none">
                 <Badge className="bg-zinc-900 text-zinc-500 border-zinc-800">SQL MODE</Badge>
               </div>
+              <button
+                onClick={handleAnalyze}
+                disabled={isAnalyzing}
+                className="absolute bottom-3 right-3 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-zinc-800 text-white font-black text-sm rounded-lg transition-all flex items-center gap-2.5 shadow-lg shadow-blue-900/30 active:scale-95"
+              >
+                {isAnalyzing ? (
+                  <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <Play className="w-4 h-4 fill-current" />
+                )}
+                {isAnalyzing ? 'ANALYZING...' : 'ANALYZE SCRIPT'}
+              </button>
             </div>
           )}
         </div>

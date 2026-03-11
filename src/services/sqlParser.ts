@@ -14,7 +14,10 @@ export const STATEMENT_STARTERS = [
 ];
 
 export function parseSQL(sql: string): ParsedSQL {
-  const cleanSql = sql.replace(/\/\*[\s\S]*?\*\/|--.*/g, ''); // Remove comments
+  // Remove comments preserving line count so node line numbers match original SQL
+  const cleanSql = sql
+    .replace(/\/\*[\s\S]*?\*\//g, m => m.replace(/[^\n]/g, ' ')) // block comments: keep newlines
+    .replace(/--.*/g, ''); // line comments: remove rest of line (line itself preserved)
   const lines = cleanSql.split('\n');
   
   // 1. Header Info
