@@ -1,0 +1,5 @@
+{
+  "name": "SQL Visualizer",
+  "description": "An expert SQL analyzer and visual diagram generator for scripts, stored procedures, and queries.",
+  "requestFramePermissions": []
+}
