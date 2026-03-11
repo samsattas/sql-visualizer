@@ -45,7 +45,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
   if (node.type === 'DECLARE') {
     return (
       <div className="w-full mb-4" onClick={(e) => { e.stopPropagation(); onNodeClick?.(node); }}>
-        <Card header="DECLARE" headerColor="zinc" className={`shadow-lg transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02]' : 'hover:border-zinc-600'}`}>
+        <Card header="DECLARE" headerColor="zinc" className={`shadow-lg transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500/70' : 'hover:border-zinc-600'}`}>
           <div className="space-y-1">
             {node.variables?.map((v, i) => (
               <div key={i} className="flex items-center justify-between text-xs py-1 border-b border-zinc-800/30 last:border-0">
@@ -62,7 +62,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
   if (node.type === 'IF') {
     return (
       <div className="w-full mb-8" onClick={(e) => { e.stopPropagation(); onNodeClick?.(node); }}>
-        <Card header="IF" headerColor="yellow" className={`shadow-xl transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02]' : 'hover:border-yellow-900/50'}`}>
+        <Card header="IF" headerColor="yellow" className={`shadow-xl transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500/70' : 'hover:border-yellow-900/50'}`}>
           <div className="mb-4 p-3 bg-yellow-950/20 border border-yellow-900/50 rounded-lg">
             <span className="text-[10px] text-yellow-500 font-black uppercase tracking-widest block mb-1">Condition</span>
             <code className="text-sm text-yellow-200 font-bold">{node.condition}</code>
@@ -101,7 +101,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
   if (node.type === 'TRY_CATCH') {
     return (
       <div className="w-full mb-8" onClick={(e) => { e.stopPropagation(); onNodeClick?.(node); }}>
-        <Card header="TRY / CATCH" headerColor="zinc" className={`shadow-xl border-dashed transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02]' : 'hover:border-zinc-600'}`}>
+        <Card header="TRY / CATCH" headerColor="zinc" className={`shadow-xl border-dashed transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500/70' : 'hover:border-zinc-600'}`}>
           <div className="grid grid-cols-1 gap-4">
             <div className="space-y-4">
               <div className="flex items-center gap-2 mb-2">
@@ -141,7 +141,7 @@ export const FlowNode: React.FC<FlowNodeProps> = ({ node, index, total, onNodeCl
         <Card 
           header={node.type} 
           headerColor={colorKey[node.type]} 
-          className={`shadow-xl transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500 scale-[1.02]' : 'hover:border-zinc-600'} ${node.type === 'TRY' ? 'border-dashed' : ''} ${node.type === 'TRANSACTION' ? 'border-emerald-700/50 bg-emerald-950/5' : ''}`}
+          className={`shadow-xl transition-all cursor-pointer ${isSelected ? 'ring-4 ring-yellow-500/70' : 'hover:border-zinc-600'} ${node.type === 'TRY' ? 'border-dashed' : ''} ${node.type === 'TRANSACTION' ? 'border-emerald-700/50 bg-emerald-950/5' : ''}`}
         >
           <div className="flex flex-col gap-3">
             <div className="flex items-start gap-3">
