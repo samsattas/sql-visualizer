@@ -8,8 +8,8 @@ import {
 } from '../types';
 
 export const STATEMENT_STARTERS = [
-  'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'SET', 'DECLARE', 'IF', 'WHILE', 
-  'BEGIN', 'END', 'RETURN', 'RAISERROR', 'PRINT', 'EXEC', 'OPEN', 'CLOSE', 
+  'SELECT', 'INSERT', 'UPDATE', 'DELETE', 'SET', 'DECLARE', 'IF', 'WHILE',
+  'BEGIN', 'END', 'RETURN', 'RAISERROR', 'PRINT', 'EXEC', 'EXECUTE', 'OPEN', 'CLOSE',
   'FETCH', 'DEALLOCATE', 'COMMIT', 'ROLLBACK', 'THROW', 'MERGE', 'TRUNCATE', 'DROP', 'CREATE', 'ALTER'
 ];
 
@@ -153,7 +153,7 @@ export function parseSQL(sql: string): ParsedSQL {
         node.table = fromMatch[1].replace(/[\[\]]/g, '');
         addTableOp(node.table, 'DELETE');
       }
-    } else if (upper.startsWith('EXEC')) {
+    } else if (upper.startsWith('EXEC ') || upper.startsWith('EXECUTE ') || upper === 'EXEC' || upper === 'EXECUTE') {
       node.type = 'EXEC';
     } else if (upper.startsWith('RAISERROR') || upper.startsWith('THROW')) {
       node.type = upper.startsWith('RAISERROR') ? 'RAISERROR' : 'THROW';
@@ -418,6 +418,7 @@ export function parseSQL(sql: string): ParsedSQL {
       inserts: allNodes.filter(n => n.type === 'INSERT').length,
       updates: allNodes.filter(n => n.type === 'UPDATE').length,
       deletes: allNodes.filter(n => n.type === 'DELETE').length,
+      execs: allNodes.filter(n => n.type === 'EXEC').length,
       tablesCount: tablesMap.size,
       databasesCount: new Set(Array.from(tablesMap.values()).map(t => t.database)).size,
       hasErrorHandling: allNodes.some(n => n.type === 'TRY' || n.type === 'TRY_CATCH' as NodeType),

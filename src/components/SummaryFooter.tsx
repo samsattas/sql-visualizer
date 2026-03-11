@@ -52,6 +52,7 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
                 <OperationStat count={parsed.summary.inserts} label="INSERT (CREATE)" color="orange-500" dotColor="bg-orange-500" />
                 <OperationStat count={parsed.summary.updates} label="UPDATE (MODIFY)" color="red-500" dotColor="bg-red-500" />
                 <OperationStat count={parsed.summary.deletes} label="DELETE (REMOVE)" color="purple-500" dotColor="bg-purple-500" />
+                <OperationStat count={parsed.summary.execs} label="EXEC (CALL)" color="cyan-500" dotColor="bg-cyan-500" />
               </div>
             </div>
           </div>

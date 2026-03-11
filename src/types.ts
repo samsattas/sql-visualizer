@@ -56,6 +56,7 @@ export interface ParsedSQL {
     inserts: number;
     updates: number;
     deletes: number;
+    execs: number;
     tablesCount: number;
     databasesCount: number;
     hasErrorHandling: boolean;
