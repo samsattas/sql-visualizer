@@ -1,6 +1,7 @@
 export interface CallSnippet {
-  lines: string[];   // original source lines of the snippet
-  startLine: number; // 1-based line number in the file where the EXEC appears
+  lines: string[];          // original source lines of the snippet
+  startLine: number;        // 1-based line number in the file where the EXEC appears
+  execLineOffset: number;   // index within lines[] that contains the EXEC call
 }
 
 export interface SPDependency {
@@ -50,34 +51,91 @@ function extractExecCalls(sql: string): string[] {
 const CONTEXT_BEFORE = 3;
 const CONTEXT_AFTER = 5;
 
+/**
+ * Finds the 0-based line indices where EXEC <callName> appears,
+ * correctly handling block comments (/* ... *\/) and inline comments (--)
+ * line by line without collapsing the file.
+ */
+function findExecLineIndices(originalSql: string, callName: string): number[] {
+  const lines = originalSql.split('\n');
+  const result: number[] = [];
+  const pattern = new RegExp(`\\bEXEC(?:UTE)?\\s+[\\w\\.\\[\\]]*${callName}\\b`, 'i');
+  let inBlockComment = false;
+
+  for (let i = 0; i < lines.length; i++) {
+    let line = lines[i];
+
+    // Continuation of a block comment started on a previous line
+    if (inBlockComment) {
+      const end = line.indexOf('*/');
+      if (end >= 0) {
+        inBlockComment = false;
+        line = line.slice(end + 2); // rest of line after */
+      } else {
+        continue; // whole line is inside block comment
+      }
+    }
+
+    // Strip all block comments that open and close on this line,
+    // and detect ones that stay open
+    let processedLine = '';
+    let j = 0;
+    while (j < line.length) {
+      if (line[j] === '/' && line[j + 1] === '*') {
+        const end = line.indexOf('*/', j + 2);
+        if (end >= 0) {
+          j = end + 2; // skip closed block comment
+        } else {
+          inBlockComment = true;
+          break; // rest of line is inside block comment
+        }
+      } else if (line[j] === '-' && line[j + 1] === '-') {
+        break; // inline comment — stop here
+      } else {
+        processedLine += line[j];
+        j++;
+      }
+    }
+
+    // Skip GRANT / utility lines
+    if (/^\s*GRANT\b/i.test(processedLine)) continue;
+    if (/^\s*sp_procxmode\b/i.test(processedLine)) continue;
+
+    if (pattern.test(processedLine)) {
+      result.push(i);
+    }
+  }
+
+  return result;
+}
+
 function extractCallSnippets(
   originalSql: string,
   calls: string[]
 ): Record<string, CallSnippet[]> {
   const originalLines = originalSql.split('\n');
-  // Clean version (preserving line numbers) to find EXEC positions
-  const cleanLines = stripNonExecutable(originalSql).split('\n');
-
   const result: Record<string, CallSnippet[]> = {};
 
   for (const callName of calls) {
+    const indices = findExecLineIndices(originalSql, callName);
     const snippets: CallSnippet[] = [];
-    const pattern = new RegExp(`\\bEXEC(?:UTE)?\\s+[\\w\\.\\[\\]]*${callName}\\b`, 'i');
 
-    for (let i = 0; i < cleanLines.length; i++) {
-      if (!pattern.test(cleanLines[i])) continue;
-
+    for (const i of indices) {
       const from = Math.max(0, i - CONTEXT_BEFORE);
       const to = Math.min(originalLines.length - 1, i + CONTEXT_AFTER);
       const raw = originalLines.slice(from, to + 1);
 
-      // Dedent: find minimum leading spaces across non-empty lines
+      // Dedent: remove common leading whitespace
       const minIndent = raw
         .filter(l => l.trim().length > 0)
         .reduce((min, l) => Math.min(min, l.match(/^(\s*)/)?.[1].length ?? 0), Infinity);
-      const dedented = raw.map(l => l.slice(Math.min(minIndent, l.length)));
+      const dedented = raw.map(l => l.slice(Math.min(isFinite(minIndent) ? minIndent : 0, l.length)));
 
-      snippets.push({ lines: dedented, startLine: i + 1 }); // 1-based
+      snippets.push({
+        lines: dedented,
+        startLine: i + 1,          // 1-based line of the EXEC in the file
+        execLineOffset: i - from,  // index within lines[] of the EXEC
+      });
     }
 
     if (snippets.length > 0) result[normalizeName(callName)] = snippets;

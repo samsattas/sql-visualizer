@@ -224,7 +224,7 @@ export const DependencyGraph: React.FC = () => {
                 .map(sp => (
                   <button
                     key={sp.name}
-                    onClick={() => setSelectedNode(prev => prev === sp.name ? null : sp.name)}
+                    onClick={(e) => { e.stopPropagation(); setSelectedNode(prev => prev === sp.name ? null : sp.name); }}
                     className={`w-full text-left px-2.5 py-2 rounded-lg border text-xs transition-colors ${
                       selectedNode === sp.name
                         ? 'bg-zinc-800 border-blue-500/60 text-white'
@@ -240,7 +240,10 @@ export const DependencyGraph: React.FC = () => {
         )}
 
         {/* Graph canvas */}
-        <div className="flex-1 overflow-auto subtle-scrollbar p-6">
+        <div
+          className="flex-1 overflow-auto subtle-scrollbar p-6"
+          onClick={() => setSelectedNode(null)}
+        >
           <div
             className="relative"
             style={{ width: totalWidth + 60, height: totalHeight + 60 }}
@@ -323,7 +326,7 @@ export const DependencyGraph: React.FC = () => {
                   }}
                   onMouseEnter={() => setHoveredNode(name)}
                   onMouseLeave={() => setHoveredNode(null)}
-                  onClick={() => setSelectedNode(prev => prev === name ? null : name)}
+                  onClick={(e) => { e.stopPropagation(); setSelectedNode(prev => prev === name ? null : name); }}
                 >
                   <div className="flex items-center gap-2 h-full">
                     <div className={`w-6 h-6 flex-none rounded flex items-center justify-center ${sp.definedInProject ? 'bg-blue-600/20' : 'bg-zinc-800'}`}>
@@ -354,7 +357,7 @@ export const DependencyGraph: React.FC = () => {
 
         {/* Side detail panel */}
         {selectedSP && (
-          <div className="flex-none w-80 border-l border-zinc-800 bg-zinc-900/30 p-4 overflow-y-auto subtle-scrollbar">
+          <div className="flex-none w-80 border-l border-zinc-800 bg-zinc-900/30 p-4 overflow-y-auto subtle-scrollbar" onClick={e => e.stopPropagation()}>
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-zinc-500 flex-none" />
@@ -444,14 +447,14 @@ export const DependencyGraph: React.FC = () => {
                               <div className="overflow-x-auto subtle-scrollbar">
                                 <pre className="p-2 text-[10px] font-mono leading-relaxed text-zinc-400 whitespace-pre min-w-fit">
                                   {snippet.lines.map((line, li) => {
-                                    const lineNo = snippet.startLine - Math.min(3, snippet.startLine - 1) + li;
-                                    const isExecLine = li === Math.min(3, snippet.startLine - 1);
+                                    const lineNo = snippet.startLine - snippet.execLineOffset + li;
+                                    const isExecLine = li === snippet.execLineOffset;
                                     return (
                                       <div
                                         key={li}
                                         className={`flex gap-2 px-1 rounded ${isExecLine ? 'bg-yellow-500/15 text-yellow-200' : ''}`}
                                       >
-                                        <span className="w-7 flex-none text-right text-zinc-700 select-none border-r border-zinc-800 pr-1.5 mr-0.5">
+                                        <span className="w-8 flex-none text-right text-zinc-700 select-none border-r border-zinc-800 pr-1.5 mr-0.5">
                                           {lineNo}
                                         </span>
                                         <span>{line || ' '}</span>
