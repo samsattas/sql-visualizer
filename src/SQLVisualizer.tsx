@@ -10,16 +10,21 @@ import {
   Workflow,
   ChevronUp,
   ChevronDown,
+  GitBranch,
 } from 'lucide-react';
 import { Badge } from './components/Badge';
 import { FlowNode } from './components/FlowNode';
 import { Sidebar } from './components/Sidebar';
 import { CodeView } from './components/CodeView';
 import { SummaryFooter } from './components/SummaryFooter';
+import { DependencyGraph } from './components/DependencyGraph';
 import { parseSQL } from './services/sqlParser';
 import { ParsedSQL, SQLNode } from './types';
 
+type ActiveTab = 'analyzer' | 'dependencies';
+
 export default function SQLVisualizer() {
+  const [activeTab, setActiveTab] = useState<ActiveTab>('analyzer');
   const [sql, setSql] = useState<string>(`CREATE PROCEDURE dbo.UpdateOrderStatus
   @OrderID INT,
   @NewStatus VARCHAR(50),
@@ -94,20 +99,48 @@ END`);
 
   return (
     <div className="h-screen flex flex-col bg-zinc-950 text-zinc-300 font-sans selection:bg-blue-500/30 overflow-hidden">
-      {/* Input Section */}
+      {/* Top Bar with Tabs */}
       <div className="flex-none border-b border-zinc-800 bg-zinc-900/50 backdrop-blur-xl z-50">
         <div className="max-w-400 mx-auto px-4 pt-3 pb-3 flex flex-col gap-3">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-9 h-9 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg shadow-blue-900/20">
-                <Database className="text-white w-5 h-5" />
+          {/* Header row: logo + tabs + collapse */}
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5 flex-none">
+              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center shadow-lg shadow-blue-900/20">
+                <Database className="text-white w-4 h-4" />
               </div>
-              <div>
-                <h1 className="text-lg font-black text-white tracking-tighter">SQL VISUALIZER</h1>
-                <p className="text-[9px] text-zinc-500 font-bold uppercase tracking-[0.2em]">Advanced Script Analyzer</p>
-              </div>
+              <span className="text-sm font-black text-white tracking-tighter hidden sm:block">SQL VISUALIZER</span>
             </div>
-            <div className="flex items-center gap-2">
+
+            {/* Tabs */}
+            <div className="flex items-center gap-1 bg-zinc-900 border border-zinc-800 rounded-lg p-0.5">
+              <button
+                onClick={() => setActiveTab('analyzer')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-black transition-all ${
+                  activeTab === 'analyzer'
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <Database className="w-3.5 h-3.5" />
+                Script Analyzer
+              </button>
+              <button
+                onClick={() => setActiveTab('dependencies')}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-black transition-all ${
+                  activeTab === 'dependencies'
+                    ? 'bg-blue-600 text-white shadow'
+                    : 'text-zinc-400 hover:text-zinc-200'
+                }`}
+              >
+                <GitBranch className="w-3.5 h-3.5" />
+                Dependency Map
+              </button>
+            </div>
+
+            <div className="flex-1" />
+
+            {/* Collapse button — only relevant for analyzer tab */}
+            {activeTab === 'analyzer' && (
               <button
                 onClick={() => setInputOpen(v => !v)}
                 title={inputOpen ? 'Collapse input' : 'Expand input'}
@@ -115,10 +148,11 @@ END`);
               >
                 {inputOpen ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
               </button>
-            </div>
+            )}
           </div>
 
-          {inputOpen && (
+          {/* Analyzer input — only in analyzer tab */}
+          {activeTab === 'analyzer' && inputOpen && (
             <div className="relative">
               <textarea
                 value={sql}
@@ -146,8 +180,10 @@ END`);
         </div>
       </div>
 
-      <div className="flex-1 overflow-hidden">
-        {parsed && (
+      <div className="flex-1 overflow-hidden flex flex-col">
+        {activeTab === 'dependencies' && <DependencyGraph />}
+
+        {activeTab === 'analyzer' && parsed && (
           <div className="h-full max-w-400 mx-auto p-4 flex flex-col">
             {/* Header */}
             <div className="flex-none mb-4 relative">
@@ -211,8 +247,8 @@ END`);
         )}
       </div>
 
-      {/* Execution Summary Footer */}
-      {parsed && <SummaryFooter parsed={parsed} />}
+      {/* Execution Summary Footer — only in analyzer tab */}
+      {activeTab === 'analyzer' && parsed && <SummaryFooter parsed={parsed} />}
     </div>
   );
 }
