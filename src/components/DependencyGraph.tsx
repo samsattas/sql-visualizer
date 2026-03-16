@@ -1,14 +1,11 @@
 import React, { useState, useCallback, useMemo, useRef } from 'react';
 import {
   FolderOpen, FileCode2, GitBranch, Search, X,
-  UploadCloud, RefreshCw, ExternalLink, Info,
+  UploadCloud, RefreshCw, ExternalLink, Info, Minus,
 } from 'lucide-react';
 import {
   parseSQLFiles, computeLayout, DependencyMap, CARD_W, CARD_H,
 } from '../services/dependencyParser';
-
-const COL_GAP = 170;
-const ROW_GAP = 18;
 
 export const DependencyGraph: React.FC = () => {
   const [depMap, setDepMap] = useState<DependencyMap | null>(null);
@@ -81,8 +78,8 @@ export const DependencyGraph: React.FC = () => {
     });
   }
 
-  const { layout, totalWidth, totalHeight } = useMemo(() => {
-    if (!depMap) return { layout: new Map(), totalWidth: 0, totalHeight: 0 };
+  const { layout, isolatedNodes, totalWidth, totalHeight } = useMemo(() => {
+    if (!depMap) return { layout: new Map(), isolatedNodes: [], totalWidth: 0, totalHeight: 0 };
     return computeLayout(depMap);
   }, [depMap]);
 
@@ -116,8 +113,9 @@ export const DependencyGraph: React.FC = () => {
     const defined = [...depMap.values()].filter(n => n.definedInProject).length;
     const external = [...depMap.values()].filter(n => !n.definedInProject).length;
     const edges = [...depMap.values()].reduce((s, n) => s + n.calls.length, 0);
-    return { defined, external, edges };
-  }, [depMap]);
+    const isolated = isolatedNodes.length;
+    return { defined, external, edges, isolated };
+  }, [depMap, isolatedNodes]);
 
   const selectedSP = selectedNode ? depMap?.get(selectedNode) : null;
 
@@ -178,6 +176,13 @@ export const DependencyGraph: React.FC = () => {
           ) : null}
           <span className="text-zinc-600">·</span>
           <span className="font-bold text-zinc-400">{stats?.edges}</span> dependencies
+          {stats?.isolated ? (
+            <>
+              <span className="text-zinc-600">·</span>
+              <span className="font-bold text-zinc-600">{stats.isolated}</span>
+              <span className="text-zinc-600">isolated</span>
+            </>
+          ) : null}
         </div>
         <div className="flex-1" />
         <div className="relative">
@@ -204,6 +209,36 @@ export const DependencyGraph: React.FC = () => {
       </div>
 
       <div className="flex-1 flex min-h-0">
+        {/* Isolated SPs panel */}
+        {isolatedNodes.length > 0 && (
+          <div className="flex-none w-52 border-r border-zinc-800 bg-zinc-900/20 flex flex-col min-h-0">
+            <div className="flex-none px-3 py-2.5 border-b border-zinc-800 flex items-center gap-2">
+              <Minus className="w-3.5 h-3.5 text-zinc-600" />
+              <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
+                Isolated ({isolatedNodes.length})
+              </span>
+            </div>
+            <div className="flex-1 overflow-y-auto subtle-scrollbar p-2 space-y-1.5">
+              {isolatedNodes
+                .filter(sp => !search.trim() || sp.name.includes(search.toLowerCase()))
+                .map(sp => (
+                  <button
+                    key={sp.name}
+                    onClick={() => setSelectedNode(prev => prev === sp.name ? null : sp.name)}
+                    className={`w-full text-left px-2.5 py-2 rounded-lg border text-xs transition-colors ${
+                      selectedNode === sp.name
+                        ? 'bg-zinc-800 border-blue-500/60 text-white'
+                        : 'bg-zinc-900 border-zinc-800 text-zinc-300 hover:border-zinc-600'
+                    }`}
+                  >
+                    <div className="font-bold truncate">{sp.displayName}</div>
+                    <div className="text-[9px] text-zinc-600 truncate mt-0.5">{sp.filePath}</div>
+                  </button>
+                ))}
+            </div>
+          </div>
+        )}
+
         {/* Graph canvas */}
         <div className="flex-1 overflow-auto subtle-scrollbar p-6">
           <div

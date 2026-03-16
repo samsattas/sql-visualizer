@@ -136,15 +136,20 @@ export interface LayoutNode {
   level: number;
 }
 
-export function computeLayout(
-  nodes: DependencyMap
-): { layout: Map<string, LayoutNode>; totalWidth: number; totalHeight: number } {
+export interface LayoutResult {
+  layout: Map<string, LayoutNode>;
+  isolatedNodes: SPDependency[];
+  totalWidth: number;
+  totalHeight: number;
+}
+
+export function computeLayout(nodes: DependencyMap): LayoutResult {
   const CARD_W = 210;
   const CARD_H = 62;
-  const COL_GAP = 170;
-  const ROW_GAP = 18;
+  const COL_GAP = 200;
+  const ROW_GAP = 22;
 
-  // Build callers map to find roots
+  // Build callers map
   const callers = new Map<string, Set<string>>();
   for (const [name, node] of nodes) {
     for (const call of node.calls) {
@@ -153,21 +158,39 @@ export function computeLayout(
     }
   }
 
-  // Roots: defined SPs not called by any other defined SP
-  const roots = [...nodes.keys()].filter(name => {
+  // Separate isolated nodes (defined, no outgoing calls, not called by anyone in project)
+  const isolatedNodes: SPDependency[] = [];
+  const activeNames = new Set<string>();
+
+  for (const [name, node] of nodes) {
+    if (!node.definedInProject) {
+      activeNames.add(name); // external nodes always go in main graph
+      continue;
+    }
+    const hasOutgoing = node.calls.length > 0;
+    const hasIncoming = [...(callers.get(name) ?? [])].some(c => nodes.get(c)?.definedInProject);
+    if (!hasOutgoing && !hasIncoming) {
+      isolatedNodes.push(node);
+    } else {
+      activeNames.add(name);
+    }
+  }
+  isolatedNodes.sort((a, b) => a.displayName.localeCompare(b.displayName));
+
+  // Roots among active nodes: defined SPs not called by any other defined active SP
+  const roots = [...activeNames].filter(name => {
     if (!nodes.get(name)?.definedInProject) return false;
     const c = callers.get(name);
     if (!c) return true;
     for (const caller of c) {
-      if (nodes.get(caller)?.definedInProject) return false;
+      if (activeNames.has(caller) && nodes.get(caller)?.definedInProject) return false;
     }
     return true;
   });
 
-  // BFS to assign levels (longest path wins)
+  // BFS to assign levels (longest-path assignment)
   const levelMap = new Map<string, number>();
   const queue: { name: string; level: number }[] = roots.map(r => ({ name: r, level: 0 }));
-
   while (queue.length > 0) {
     const { name, level } = queue.shift()!;
     if ((levelMap.get(name) ?? -1) >= level) continue;
@@ -175,17 +198,16 @@ export function computeLayout(
     const node = nodes.get(name);
     if (node) {
       for (const call of node.calls) {
-        queue.push({ name: call, level: level + 1 });
+        if (activeNames.has(call)) queue.push({ name: call, level: level + 1 });
       }
     }
   }
-
-  // Assign level 0 to anything unvisited
-  for (const name of nodes.keys()) {
+  // Assign level 0 to any unvisited active nodes
+  for (const name of activeNames) {
     if (!levelMap.has(name)) levelMap.set(name, 0);
   }
 
-  // Group by level, defined first then external, then alphabetical
+  // Group by level, initial sort: defined first, then alphabetical
   const byLevel = new Map<number, string[]>();
   for (const [name, level] of levelMap) {
     if (!byLevel.has(level)) byLevel.set(level, []);
@@ -195,21 +217,56 @@ export function computeLayout(
     names.sort((a, b) => {
       const da = nodes.get(a)?.definedInProject ? 0 : 1;
       const db = nodes.get(b)?.definedInProject ? 0 : 1;
-      if (da !== db) return da - db;
-      return a.localeCompare(b);
+      return da !== db ? da - db : a.localeCompare(b);
     });
+  }
+
+  // Barycentric crossing-reduction: 4 passes (forward + backward)
+  const sortedLevels = [...byLevel.keys()].sort((a, b) => a - b);
+
+  for (let pass = 0; pass < 4; pass++) {
+    // Forward: order by avg position of predecessors (callers) at prev level
+    for (const level of sortedLevels) {
+      if (level === 0) continue;
+      const prevNames = byLevel.get(level - 1)!;
+      const prevPos = new Map<string, number>(prevNames.map((n, i) => [n, i]));
+      byLevel.get(level)!.sort((a, b) => {
+        const aCallers = [...(callers.get(a) ?? [])].filter(c => prevPos.has(c));
+        const bCallers = [...(callers.get(b) ?? [])].filter(c => prevPos.has(c));
+        const avg = (arr: string[]) =>
+          arr.length ? arr.reduce((s, c) => s + prevPos.get(c)!, 0) / arr.length : 1e9;
+        return avg(aCallers) - avg(bCallers);
+      });
+    }
+    // Backward: order by avg position of successors (callees) at next level
+    for (const level of [...sortedLevels].reverse()) {
+      const nextNames = byLevel.get(level + 1);
+      if (!nextNames) continue;
+      const nextPos = new Map<string, number>(nextNames.map((n, i) => [n, i]));
+      byLevel.get(level)!.sort((a, b) => {
+        const aCalls = (nodes.get(a)?.calls ?? []).filter(c => nextPos.has(c));
+        const bCalls = (nodes.get(b)?.calls ?? []).filter(c => nextPos.has(c));
+        const avg = (arr: string[]) =>
+          arr.length ? arr.reduce((s, c) => s + nextPos.get(c)!, 0) / arr.length : 1e9;
+        return avg(aCalls) - avg(bCalls);
+      });
+    }
   }
 
   const maxLevel = Math.max(...levelMap.values(), 0);
   const maxPerLevel = Math.max(...[...byLevel.values()].map(v => v.length), 1);
+  const totalHeight = maxPerLevel * (CARD_H + ROW_GAP);
 
+  // Position nodes — vertically center each column
   const layout = new Map<string, LayoutNode>();
   for (const [level, names] of byLevel) {
+    const colHeight = names.length * (CARD_H + ROW_GAP);
+    const yOffset = (totalHeight - colHeight) / 2;
     names.forEach((name, idx) => {
       layout.set(name, {
         sp: nodes.get(name)!,
         x: level * (CARD_W + COL_GAP),
-        y: idx * (CARD_H + ROW_GAP),
+        y: yOffset + idx * (CARD_H + ROW_GAP),
         level,
       });
     });
@@ -217,8 +274,9 @@ export function computeLayout(
 
   return {
     layout,
+    isolatedNodes,
     totalWidth: (maxLevel + 1) * (CARD_W + COL_GAP),
-    totalHeight: maxPerLevel * (CARD_H + ROW_GAP) + ROW_GAP,
+    totalHeight,
   };
 }
 
