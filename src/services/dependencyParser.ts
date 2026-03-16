@@ -11,12 +11,36 @@ export interface SPDependency {
   calls: string[];        // normalized names of SPs this one calls
   callSnippets: Record<string, CallSnippet[]>; // callee name → code snippets
   definedInProject: boolean;
+  homeDatabase: string | null; // from USE <db> statement, or inferred from how it's called
 }
 
 export type DependencyMap = Map<string, SPDependency>;
 
 function normalizeName(raw: string): string {
   return raw.replace(/\[|\]/g, '').split('.').pop()!.toLowerCase().trim();
+}
+
+function extractHomeDatabase(sql: string): string | null {
+  const match = sql.match(/^\s*USE\s+(\w+)/im);
+  return match ? match[1] : null;
+}
+
+/** Returns exec calls with their explicit database prefix (e.g., `db..sp` → db). */
+function extractExecCallsRaw(sql: string): { name: string; database: string | null }[] {
+  const clean = stripNonExecutable(sql);
+  const found: { name: string; database: string | null }[] = [];
+  const re = /\bEXEC(?:UTE)?\s+([\w\.\[\]]+)/gi;
+  let m: RegExpExecArray | null;
+  while ((m = re.exec(clean)) !== null) {
+    const raw = m[1].replace(/\[|\]/g, '');
+    const parts = raw.split('.');
+    const name = parts[parts.length - 1];
+    if (!name) continue;
+    // Database is the first segment when 3+ parts (e.g., db..sp or db.schema.sp)
+    const database = parts.length >= 3 && parts[0] ? parts[0] : null;
+    found.push({ name, database });
+  }
+  return found;
 }
 
 function extractSPName(sql: string): string | null {
@@ -35,18 +59,6 @@ function stripNonExecutable(sql: string): string {
     .replace(/^\s*go\s*$/gim, '');
 }
 
-function extractExecCalls(sql: string): string[] {
-  const clean = stripNonExecutable(sql);
-
-  const found: string[] = [];
-  const re = /\bEXEC(?:UTE)?\s+([\w\.\[\]]+)/gi;
-  let m: RegExpExecArray | null;
-  while ((m = re.exec(clean)) !== null) {
-    const name = m[1].replace(/\[|\]/g, '').split('.').pop();
-    if (name) found.push(name);
-  }
-  return [...new Set(found)];
-}
 
 const CONTEXT_BEFORE = 3;
 const CONTEXT_AFTER = 5;
@@ -148,13 +160,28 @@ export function parseSQLFiles(
   files: { name: string; content: string }[]
 ): DependencyMap {
   const map: DependencyMap = new Map();
+  // Tracks explicit DB prefix used when calling an external SP (e.g., db..sp_foo → 'db')
+  const calledWithDB = new Map<string, string>();
 
   for (const file of files) {
     const spName = extractSPName(file.content);
     if (!spName) continue;
 
     const key = normalizeName(spName);
-    const rawCalls = extractExecCalls(file.content);
+    const homeDatabase = extractHomeDatabase(file.content);
+    const rawCallsWithDB = extractExecCallsRaw(file.content);
+
+    // Collect DB info for external SP calls:
+    // explicit prefix wins (e.g. db..sp_foo), otherwise fall back to this file's USE database
+    for (const { name, database } of rawCallsWithDB) {
+      const normName = normalizeName(name);
+      const effectiveDB = database ?? homeDatabase;
+      if (effectiveDB && !calledWithDB.has(normName)) {
+        calledWithDB.set(normName, effectiveDB);
+      }
+    }
+
+    const rawCalls = [...new Set(rawCallsWithDB.map(c => c.name))];
     const calls = [...new Set(rawCalls.map(normalizeName).filter(c => c !== key))];
     const callSnippets = extractCallSnippets(file.content, rawCalls.filter(c => normalizeName(c) !== key));
 
@@ -165,6 +192,7 @@ export function parseSQLFiles(
       calls,
       callSnippets,
       definedInProject: true,
+      homeDatabase,
     });
   }
 
@@ -179,6 +207,7 @@ export function parseSQLFiles(
           calls: [],
           callSnippets: {},
           definedInProject: false,
+          homeDatabase: calledWithDB.get(call) ?? null,
         });
       }
     }

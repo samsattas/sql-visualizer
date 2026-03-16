@@ -87,7 +87,10 @@ export const DependencyGraph: React.FC = () => {
     if (!depMap) return new Set<string>();
     if (!search.trim()) return new Set(depMap.keys());
     const q = search.toLowerCase();
-    return new Set([...depMap.keys()].filter(k => k.includes(q)));
+    return new Set([...depMap.entries()]
+      .filter(([k, sp]) => k.includes(q) || (sp.homeDatabase?.toLowerCase().includes(q) ?? false))
+      .map(([k]) => k)
+    );
   }, [depMap, search]);
 
   const activeNode = hoveredNode ?? selectedNode;
@@ -220,7 +223,7 @@ export const DependencyGraph: React.FC = () => {
             </div>
             <div className="flex-1 overflow-y-auto subtle-scrollbar p-2 space-y-1.5">
               {isolatedNodes
-                .filter(sp => !search.trim() || sp.name.includes(search.toLowerCase()))
+                .filter(sp => !search.trim() || sp.name.includes(search.toLowerCase()) || (sp.homeDatabase?.toLowerCase().includes(search.toLowerCase()) ?? false))
                 .map(sp => (
                   <button
                     key={sp.name}
@@ -232,7 +235,9 @@ export const DependencyGraph: React.FC = () => {
                     }`}
                   >
                     <div className="font-bold truncate">{sp.displayName}</div>
-                    <div className="text-[9px] text-zinc-600 truncate mt-0.5">{sp.filePath}</div>
+                    {sp.homeDatabase && (
+                      <div className="text-[9px] text-blue-400/70 font-mono truncate mt-0.5">{sp.homeDatabase}</div>
+                    )}
                   </button>
                 ))}
             </div>
@@ -336,11 +341,13 @@ export const DependencyGraph: React.FC = () => {
                       }
                     </div>
                     <div className="flex-1 min-w-0">
+                      {sp.homeDatabase && (
+                        <div className="text-[9px] text-blue-400/60 font-mono truncate leading-none mb-0.5">
+                          {sp.homeDatabase}
+                        </div>
+                      )}
                       <div className={`text-xs font-black truncate leading-tight ${sp.definedInProject ? 'text-white' : 'text-zinc-400'}`}>
                         {sp.displayName}
-                      </div>
-                      <div className="text-[10px] text-zinc-600 truncate mt-0.5">
-                        {sp.definedInProject ? sp.filePath : 'external / not found'}
                       </div>
                     </div>
                     {sp.calls.length > 0 && (
@@ -371,6 +378,9 @@ export const DependencyGraph: React.FC = () => {
             {/* SP name + file */}
             <div className="mb-4">
               <p className="text-sm font-black text-white break-all">{selectedSP.displayName}</p>
+              {selectedSP.homeDatabase && (
+                <p className="text-[10px] text-blue-400/80 font-mono mt-0.5">{selectedSP.homeDatabase}</p>
+              )}
               {selectedSP.definedInProject && (
                 <p className="text-[10px] text-zinc-500 mt-0.5 break-all">{selectedSP.filePath}</p>
               )}
