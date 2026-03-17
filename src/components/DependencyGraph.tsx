@@ -48,13 +48,13 @@ export const DependencyGraph: React.FC = () => {
     const files: File[] = [];
     const items = e.dataTransfer.items;
     if (items) {
-      for (const item of Array.from(items)) {
-        const entry = item.webkitGetAsEntry?.();
+      for (const item of Array.from(items) as DataTransferItem[]) {
+        const entry = (item as unknown as { webkitGetAsEntry?(): FileSystemEntry | null }).webkitGetAsEntry?.();
         if (entry?.isDirectory) {
           readDirRecursive(entry as FileSystemDirectoryEntry, files).then(() => loadFiles(files));
           return;
         }
-        const f = item.getAsFile();
+        const f = (item as unknown as { getAsFile(): File | null }).getAsFile();
         if (f) files.push(f);
       }
     }

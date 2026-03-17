@@ -32,7 +32,7 @@ const ListTooltip = ({ title, items, dotColor }: { title: string, items: string[
     initial={{ opacity: 0, y: 5, scale: 0.95 }}
     animate={{ opacity: 1, y: 0, scale: 1 }}
     exit={{ opacity: 0, y: 5, scale: 0.95 }}
-    className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 pointer-events-none min-w-[140px]"
+    className="absolute bottom-full mb-2 left-1/2 -translate-x-1/2 px-3 py-2 bg-zinc-800 border border-zinc-700 rounded-lg shadow-xl z-50 pointer-events-none min-w-35"
   >
     <p className="text-[9px] font-black text-zinc-500 uppercase tracking-widest mb-1.5">{title}</p>
     {items.length > 0 ? items.map((item, i) => (
@@ -114,8 +114,8 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
   ));
 
   return (
-    <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 p-4 z-[60] shadow-2xl">
-      <div className="max-w-[1600px] mx-auto flex flex-wrap items-center justify-between gap-6">
+    <div className="fixed bottom-0 left-0 right-0 bg-zinc-900 border-t border-zinc-800 p-4 z-60 shadow-2xl">
+      <div className="max-w-400 mx-auto flex flex-wrap items-center justify-between gap-6">
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
