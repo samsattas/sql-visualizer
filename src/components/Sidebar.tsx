@@ -2,6 +2,7 @@ import React from 'react';
 import { Settings2, Variable, Table as TableIcon, ChevronLeft, ChevronRight } from 'lucide-react';
 import { ParsedSQL } from '../types';
 import { Badge } from './Badge';
+import { useLang } from '../i18n';
 
 interface SidebarProps {
   parsed: ParsedSQL;
@@ -10,6 +11,7 @@ interface SidebarProps {
 }
 
 export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) => {
+  const { t } = useLang();
   if (!isOpen) {
     return (
       <div className="h-full flex flex-col items-center py-4 gap-3 border-r border-zinc-800/50">
@@ -25,7 +27,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
             className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest"
             style={{ writingMode: 'vertical-rl', transform: 'rotate(180deg)' }}
           >
-            Parameters & Variables
+            {t.parametersAndVars}
           </span>
         </div>
       </div>
@@ -36,7 +38,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
     <div className="h-full overflow-y-auto custom-scrollbar space-y-6">
       {/* Header row with collapse button */}
       <div className="flex items-center justify-between">
-        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">Left panel</span>
+        <span className="text-[10px] font-black text-zinc-600 uppercase tracking-widest">{t.leftPanel}</span>
         <button
           onClick={onToggle}
           title="Collapse panel"
@@ -49,7 +51,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
       <section>
         <div className="flex items-center gap-2 mb-4">
           <Settings2 className="w-4 h-4 text-zinc-500" />
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Parameters</h3>
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t.parameters}</h3>
         </div>
         <div className="space-y-2">
           {parsed.parameters.length > 0 ? parsed.parameters.map((p, i) => (
@@ -66,11 +68,11 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-[10px] font-mono text-zinc-500">{p.type}</span>
-                {p.defaultValue && <span className="text-[10px] text-zinc-600">def: {p.defaultValue}</span>}
+                {p.defaultValue && <span className="text-[10px] text-zinc-600">{t.default_}: {p.defaultValue}</span>}
               </div>
             </div>
           )) : (
-            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">No parameters detected</div>
+            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">{t.noParameters}</div>
           )}
         </div>
       </section>
@@ -78,7 +80,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
       <section>
         <div className="flex items-center gap-2 mb-4">
           <Variable className="w-4 h-4 text-zinc-500" />
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Internal Variables</h3>
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t.internalVars}</h3>
         </div>
         <div className="space-y-2">
           {parsed.variables.length > 0 ? parsed.variables.map((v, i) => (
@@ -90,7 +92,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
               <span className="text-[10px] font-mono text-zinc-600 uppercase">{v.type}</span>
             </div>
           )) : (
-            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">No variables declared</div>
+            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">{t.noVariables}</div>
           )}
         </div>
       </section>
@@ -98,7 +100,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
       <section>
         <div className="flex items-center gap-2 mb-4">
           <TableIcon className="w-4 h-4 text-zinc-500" />
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Data Map</h3>
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t.dataMap}</h3>
         </div>
         <div className="space-y-4">
           {parsed.tables.length > 0 ? parsed.tables.map((t, i) => (
@@ -123,7 +125,7 @@ export const Sidebar: React.FC<SidebarProps> = ({ parsed, isOpen, onToggle }) =>
               </div>
             </div>
           )) : (
-            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">No tables detected</div>
+            <div className="text-xs text-zinc-600 italic p-4 border border-dashed border-zinc-800 rounded-lg text-center">{t.noTables}</div>
           )}
         </div>
       </section>

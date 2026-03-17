@@ -6,8 +6,10 @@ import {
 import {
   parseSQLFiles, computeLayout, DependencyMap, CARD_W, CARD_H,
 } from '../services/dependencyParser';
+import { useLang } from '../i18n';
 
 export const DependencyGraph: React.FC = () => {
+  const { t } = useLang();
   const [depMap, setDepMap] = useState<DependencyMap | null>(null);
   const [search, setSearch] = useState('');
   const [hoveredNode, setHoveredNode] = useState<string | null>(null);
@@ -134,24 +136,21 @@ export const DependencyGraph: React.FC = () => {
           <UploadCloud className={`w-10 h-10 transition-colors ${isDragging ? 'text-blue-400' : 'text-zinc-600'}`} />
         </div>
         <div className="text-center">
-          <h2 className="text-xl font-black text-white tracking-tight mb-1">Load SQL Scripts</h2>
-          <p className="text-sm text-zinc-500 max-w-sm">
-            Drop a folder or SQL files here, or use the buttons below.
-            Each file should contain one <code className="text-zinc-400">CREATE PROCEDURE</code>.
-          </p>
+          <h2 className="text-xl font-black text-white tracking-tight mb-1">{t.loadTitle}</h2>
+          <p className="text-sm text-zinc-500 max-w-sm">{t.loadDesc}</p>
         </div>
         <div className="flex gap-3">
           <button
             onClick={() => folderInputRef.current?.click()}
             className="flex items-center gap-2 px-5 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-black text-sm rounded-lg transition-all active:scale-95 shadow-lg shadow-blue-900/20"
           >
-            <FolderOpen className="w-4 h-4" /> Load Folder
+            <FolderOpen className="w-4 h-4" /> {t.loadFolder}
           </button>
           <button
             onClick={() => filesInputRef.current?.click()}
             className="flex items-center gap-2 px-5 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-200 font-black text-sm rounded-lg transition-all active:scale-95 border border-zinc-700"
           >
-            <FileCode2 className="w-4 h-4" /> Select Files
+            <FileCode2 className="w-4 h-4" /> {t.selectFiles}
           </button>
         </div>
         <input ref={folderInputRef} type="file" className="hidden"
@@ -169,21 +168,21 @@ export const DependencyGraph: React.FC = () => {
       <div className="flex-none flex items-center gap-3 px-4 py-2 border-b border-zinc-800 bg-zinc-900/30">
         <div className="flex items-center gap-2 text-xs text-zinc-400">
           <GitBranch className="w-3.5 h-3.5 text-blue-500" />
-          <span className="font-bold text-white">{stats?.defined}</span> scripts
+          <span className="font-bold text-white">{stats?.defined}</span> {t.scripts}
           {stats?.external ? (
             <>
               <span className="text-zinc-600">·</span>
               <span className="font-bold text-zinc-400">{stats.external}</span>
-              <span className="text-zinc-500">external</span>
+              <span className="text-zinc-500">{t.external}</span>
             </>
           ) : null}
           <span className="text-zinc-600">·</span>
-          <span className="font-bold text-zinc-400">{stats?.edges}</span> dependencies
+          <span className="font-bold text-zinc-400">{stats?.edges}</span> {t.dependencies}
           {stats?.isolated ? (
             <>
               <span className="text-zinc-600">·</span>
               <span className="font-bold text-zinc-600">{stats.isolated}</span>
-              <span className="text-zinc-600">isolated</span>
+              <span className="text-zinc-600">{t.isolated}</span>
             </>
           ) : null}
         </div>
@@ -193,7 +192,7 @@ export const DependencyGraph: React.FC = () => {
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
-            placeholder="Search..."
+            placeholder={t.searchPlaceholder}
             className="h-7 pl-8 pr-7 bg-zinc-900 border border-zinc-700 rounded-lg text-xs text-zinc-300 focus:outline-none focus:border-blue-500/60 w-48"
           />
           {search && (
@@ -204,10 +203,10 @@ export const DependencyGraph: React.FC = () => {
         </div>
         <button
           onClick={() => { setDepMap(null); setSelectedNode(null); }}
-          title="Load new files"
+          title={t.loadNewFiles}
           className="h-7 px-2.5 flex items-center gap-1.5 bg-zinc-800 border border-zinc-700 hover:border-zinc-600 rounded-lg text-xs text-zinc-400 hover:text-white transition-colors"
         >
-          <RefreshCw className="w-3 h-3" /> Reset
+          <RefreshCw className="w-3 h-3" /> {t.reset}
         </button>
       </div>
 
@@ -218,7 +217,7 @@ export const DependencyGraph: React.FC = () => {
             <div className="flex-none px-3 py-2.5 border-b border-zinc-800 flex items-center gap-2">
               <Minus className="w-3.5 h-3.5 text-zinc-600" />
               <span className="text-[10px] font-black text-zinc-500 uppercase tracking-widest">
-                Isolated ({isolatedNodes.length})
+                {t.isolatedLabel} ({isolatedNodes.length})
               </span>
             </div>
             <div className="flex-1 overflow-y-auto subtle-scrollbar p-2 space-y-1.5">
@@ -368,7 +367,7 @@ export const DependencyGraph: React.FC = () => {
             <div className="flex items-start justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Info className="w-4 h-4 text-zinc-500 flex-none" />
-                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Details</h3>
+                <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t.details}</h3>
               </div>
               <button onClick={() => setSelectedNode(null)} className="text-zinc-600 hover:text-white">
                 <X className="w-3.5 h-3.5" />
@@ -386,7 +385,7 @@ export const DependencyGraph: React.FC = () => {
               )}
               {!selectedSP.definedInProject && (
                 <span className="inline-block mt-1 text-[9px] font-bold uppercase text-yellow-500 bg-yellow-950/40 border border-yellow-900/50 rounded px-1.5 py-0.5">
-                  External — not in project
+                  {t.externalBadge}
                 </span>
               )}
             </div>
@@ -394,7 +393,7 @@ export const DependencyGraph: React.FC = () => {
             {/* Calls */}
             {selectedSP.calls.length > 0 && (
               <div className="mb-4">
-                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">Calls ({selectedSP.calls.length})</p>
+                <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">{t.callsLabel} ({selectedSP.calls.length})</p>
                 <div className="space-y-1.5">
                   {selectedSP.calls.map(call => {
                     const calledSP = depMap?.get(call);
@@ -410,7 +409,7 @@ export const DependencyGraph: React.FC = () => {
                       >
                         <span className="font-bold">{calledSP?.displayName ?? call}</span>
                         {!calledSP?.definedInProject && (
-                          <span className="ml-1 text-[9px] text-yellow-600">external</span>
+                          <span className="ml-1 text-[9px] text-yellow-600">{t.externalSmall}</span>
                         )}
                       </button>
                     );
@@ -428,7 +427,7 @@ export const DependencyGraph: React.FC = () => {
               return (
                 <div>
                   <p className="text-[10px] font-black text-zinc-500 uppercase tracking-widest mb-2">
-                    Called by ({callers.length})
+                    {t.calledByLabel} ({callers.length})
                   </p>
                   <div className="space-y-3">
                     {callers.map(caller => {
@@ -450,8 +449,8 @@ export const DependencyGraph: React.FC = () => {
                               <div className="px-2 py-1 bg-zinc-900/60 border-b border-zinc-800 flex items-center gap-1.5">
                                 <div className="w-1.5 h-1.5 rounded-full bg-yellow-500" />
                                 <span className="text-[9px] font-mono text-zinc-500">
-                                  line {snippet.startLine}
-                                  {snippets.length > 1 ? ` (occurrence ${si + 1})` : ''}
+                                  {t.line} {snippet.startLine}
+                                  {snippets.length > 1 ? ` (${t.occurrence} ${si + 1})` : ''}
                                 </span>
                               </div>
                               <div className="overflow-x-auto subtle-scrollbar">
@@ -477,7 +476,7 @@ export const DependencyGraph: React.FC = () => {
                           ))}
 
                           {snippets.length === 0 && (
-                            <p className="px-2.5 py-2 text-[10px] text-zinc-600 italic">No snippet available</p>
+                            <p className="px-2.5 py-2 text-[10px] text-zinc-600 italic">{t.noSnippet}</p>
                           )}
                         </div>
                       );

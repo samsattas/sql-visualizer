@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { ParsedSQL } from '../types';
+import { useLang } from '../i18n';
 
 interface SummaryFooterProps {
   parsed: ParsedSQL;
@@ -21,6 +22,11 @@ const StatTooltip = ({ label, color }: { label: string, color: string }) => (
   </motion.div>
 );
 
+const NoneLabel = () => {
+  const { t } = useLang();
+  return <span className="text-[10px] text-zinc-600 italic">{t.noneTooltip}</span>;
+};
+
 const ListTooltip = ({ title, items, dotColor }: { title: string, items: string[], dotColor?: string }) => (
   <motion.div
     initial={{ opacity: 0, y: 5, scale: 0.95 }}
@@ -35,7 +41,7 @@ const ListTooltip = ({ title, items, dotColor }: { title: string, items: string[
         <span className="text-[11px] font-mono text-zinc-200 whitespace-nowrap">{item}</span>
       </div>
     )) : (
-      <span className="text-[10px] text-zinc-600 italic">None</span>
+      <NoneLabel />
     )}
     <div className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-zinc-800" />
   </motion.div>
@@ -82,6 +88,7 @@ const ListStat = ({ count, label, items }: { count: number, label: string, items
 };
 
 export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
+  const { t } = useLang();
   const databaseNames = Array.from<string>(new Set(parsed.tables.map(t => t.database)));
   const tableNames = parsed.tables.map(t => t.database !== 'Default' ? `${t.database}.${t.name}` : t.name);
 
@@ -112,13 +119,13 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
         <div className="flex items-center gap-8">
           <div className="flex items-center gap-4">
             <div className="flex flex-col">
-              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Operations</span>
+              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{t.operations}</span>
               <div className="flex items-center gap-4 mt-1">
-                <OperationStat count={parsed.summary.selects} label="SELECT (READ)" color="blue-500" dotColor="bg-blue-500" />
-                <OperationStat count={parsed.summary.inserts} label="INSERT (CREATE)" color="orange-500" dotColor="bg-orange-500" />
-                <OperationStat count={parsed.summary.updates} label="UPDATE (MODIFY)" color="red-500" dotColor="bg-red-500" />
-                <OperationStat count={parsed.summary.deletes} label="DELETE (REMOVE)" color="purple-500" dotColor="bg-purple-500" />
-                <OperationStat count={parsed.summary.execs} label="EXEC (CALL)" color="cyan-500" dotColor="bg-cyan-500" items={execNames} />
+                <OperationStat count={parsed.summary.selects} label={t.selectOp} color="blue-500" dotColor="bg-blue-500" />
+                <OperationStat count={parsed.summary.inserts} label={t.insertOp} color="orange-500" dotColor="bg-orange-500" />
+                <OperationStat count={parsed.summary.updates} label={t.updateOp} color="red-500" dotColor="bg-red-500" />
+                <OperationStat count={parsed.summary.deletes} label={t.deleteOp} color="purple-500" dotColor="bg-purple-500" />
+                <OperationStat count={parsed.summary.execs} label={t.execOp} color="cyan-500" dotColor="bg-cyan-500" items={execNames} />
               </div>
             </div>
           </div>
@@ -126,23 +133,23 @@ export const SummaryFooter: React.FC<SummaryFooterProps> = ({ parsed }) => {
           <div className="h-8 w-px bg-zinc-800" />
 
           <div className="flex gap-6">
-            <ListStat count={parsed.summary.databasesCount} label="Databases" items={databaseNames} />
-            <ListStat count={parsed.summary.tablesCount} label="Tables" items={tableNames} />
+            <ListStat count={parsed.summary.databasesCount} label={t.databases} items={databaseNames} />
+            <ListStat count={parsed.summary.tablesCount} label={t.tables} items={tableNames} />
           </div>
 
           <div className="h-8 w-px bg-zinc-800" />
 
           <div className="flex gap-6">
             <div className="flex flex-col">
-              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Error Handling</span>
+              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{t.errorHandling}</span>
               <span className={`text-sm font-black mt-1 ${parsed.summary.hasErrorHandling ? 'text-green-500' : 'text-zinc-600'}`}>
-                {parsed.summary.hasErrorHandling ? 'ENABLED' : 'NONE'}
+                {parsed.summary.hasErrorHandling ? t.enabled : t.none}
               </span>
             </div>
             <div className="flex flex-col">
-              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">Transactions</span>
+              <span className="text-[9px] text-zinc-500 font-black uppercase tracking-widest">{t.transactions}</span>
               <span className={`text-sm font-black mt-1 ${parsed.summary.hasTransaction ? 'text-emerald-500' : 'text-zinc-600'}`}>
-                {parsed.summary.hasTransaction ? 'ACTIVE' : 'NONE'}
+                {parsed.summary.hasTransaction ? t.active : t.none}
               </span>
             </div>
           </div>

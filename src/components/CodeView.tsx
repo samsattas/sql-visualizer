@@ -2,6 +2,7 @@ import React from 'react';
 import { Code2, ChevronRight, ChevronLeft } from 'lucide-react';
 import { SQLNode } from '../types';
 import { Badge } from './Badge';
+import { useLang } from '../i18n';
 
 interface CodeViewProps {
   sqlLines: string[];
@@ -12,12 +13,13 @@ interface CodeViewProps {
 }
 
 export const CodeView: React.FC<CodeViewProps> = ({ sqlLines, selectedNode, codeLinesRef, isOpen, onToggle }) => {
+  const { t } = useLang();
   if (!isOpen) {
     return (
       <div className="h-full flex flex-col items-center py-4 gap-3 bg-zinc-900 border border-zinc-800 rounded-2xl">
         <button
           onClick={onToggle}
-          title="Expand source code"
+          title={t.sourceCode}
           className="w-8 h-8 flex items-center justify-center rounded-lg bg-zinc-800 border border-zinc-700 hover:border-zinc-600 text-zinc-400 hover:text-white transition-colors"
         >
           <ChevronLeft className="w-4 h-4" />
@@ -27,7 +29,7 @@ export const CodeView: React.FC<CodeViewProps> = ({ sqlLines, selectedNode, code
             className="text-[10px] text-zinc-600 font-bold uppercase tracking-widest"
             style={{ writingMode: 'vertical-rl' }}
           >
-            Source Code
+            {t.sourceCode}
           </span>
         </div>
       </div>
@@ -39,19 +41,19 @@ export const CodeView: React.FC<CodeViewProps> = ({ sqlLines, selectedNode, code
       <div className="flex-none p-4 border-b border-zinc-800 bg-zinc-900/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <Code2 className="w-4 h-4 text-zinc-500" />
-          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">Source Code</h3>
+          <h3 className="text-xs font-black text-zinc-400 uppercase tracking-widest">{t.sourceCode}</h3>
         </div>
         <div className="flex items-center gap-2">
           {selectedNode && (
             <Badge className="bg-yellow-950/30 text-yellow-500 border-yellow-900/50 lowercase">
               {selectedNode.startLine === selectedNode.endLine
-                ? `line ${selectedNode.startLine + 1}`
-                : `lines ${selectedNode.startLine + 1}-${selectedNode.endLine + 1}`}
+                ? `${t.line} ${selectedNode.startLine + 1}`
+                : `${t.lines} ${selectedNode.startLine + 1}-${selectedNode.endLine + 1}`}
             </Badge>
           )}
           <button
             onClick={onToggle}
-            title="Collapse source code"
+            title={t.sourceCode}
             className="w-6 h-6 flex items-center justify-center rounded bg-zinc-800 border border-zinc-700 hover:border-zinc-600 text-zinc-500 hover:text-white transition-colors"
           >
             <ChevronRight className="w-3 h-3" />
